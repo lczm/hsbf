@@ -8,14 +8,16 @@ data Instruction = MoveNext
                  | Store
                  | JumpForward
                  | JumpBack
-                 | Debug
+                 | DebugFront
+                 | DebugBack
+                 | DebugMemory
                  deriving Show
 
 exampleInputHelloWorld :: String
 exampleInputHelloWorld = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
 
 exampleIncrementDecrement :: String
-exampleIncrementDecrement = "++.,.@"
+exampleIncrementDecrement = "++-.,.@"
 
 debugMax :: Int
 debugMax = 10
@@ -35,12 +37,15 @@ modifyMemory' (x:xs) current i y = if current == i
 dataPointer :: Int
 dataPointer = 0
 
+previousStack :: [Instruction]
+previousStack = []
+
 exampleInstructions = map parse exampleIncrementDecrement
 
 main :: IO ()
 main = do
   putStrLn "HSBF"
-  eval exampleInstructions memory dataPointer
+  eval previousStack exampleInstructions memory dataPointer
 
 parse :: Char -> Instruction
 parse '>' = MoveNext
@@ -51,25 +56,31 @@ parse '.' = Print
 parse ',' = Store
 parse '[' = JumpForward
 parse ']' = JumpBack
-parse '@' = Debug
+parse '@' = DebugFront
+parse '#' = DebugBack
+parse '$' = DebugMemory
 
-eval :: [Instruction] -> [Int] -> Int -> IO ()
-eval [] _ _                              = putStrLn "end of evaluation"
-eval (MoveNext:xs) memory dataPointer    = eval xs memory (dataPointer+1)
-eval (MovePrev:xs) memory dataPointer    = eval xs memory (dataPointer-1)
-eval (Increment:xs) memory dataPointer   = eval xs (modifyMemory memory dataPointer ((memory !! dataPointer)+1)) dataPointer
-eval (Decrement:xs) memory dataPointer   = eval xs (modifyMemory memory dataPointer ((memory !! dataPointer)-1)) dataPointer
-eval (Print:xs) memory dataPointer       = do 
+-- eval :: PreviousInstructions -> CurrentInstructions -> Memory -> DataPointer
+eval :: [Instruction] -> [Instruction] -> [Int] -> Int -> IO ()
+eval [] [] _ _                              = putStrLn "end of evaluation"
+eval xs (MoveNext:ys) memory dataPointer    = eval (MoveNext:xs) ys memory (dataPointer+1)
+eval xs (MovePrev:ys) memory dataPointer    = eval (MovePrev:xs) ys memory (dataPointer-1)
+eval xs (Increment:ys) memory dataPointer   = eval (Increment:xs) ys (modifyMemory memory dataPointer ((memory !! dataPointer)+1)) dataPointer
+eval xs (Decrement:ys) memory dataPointer   = eval (Decrement:xs) ys (modifyMemory memory dataPointer ((memory !! dataPointer)-1)) dataPointer
+eval xs (Print:ys) memory dataPointer       = do
   -- current data at the memory cell
   putStrLn $ show (memory !! dataPointer)
   -- move to next instruction
-  eval xs memory (dataPointer + 1)
-eval (Store:xs) memory dataPointer       = do
+  eval (Print:xs) ys memory (dataPointer + 1)
+eval xs (Store:ys) memory dataPointer       = do
   char <- getChar
   putStrLn $ show char
   putStrLn $ show (fromEnum char)
   -- move to next instruction
-  eval xs (modifyMemory memory dataPointer (fromEnum char)) (dataPointer+1)
-eval (JumpForward:xs) memory dataPointer = pure ()
-eval (JumpBack:xs) memory dataPointer    = pure ()
-eval (Debug:xs) memory dataPointer       = putStrLn (show $ take debugMax $ memory)
+  eval (Store:xs) ys (modifyMemory memory dataPointer (fromEnum char)) (dataPointer+1)
+eval xs (JumpForward:ys) memory dataPointer = pure ()
+eval xs (JumpBack:ys) memory dataPointer    = pure ()
+-- debugging instruction
+eval xs (DebugFront:ys) memory dataPointer  = putStrLn (show $ xs)
+eval xs (DebugBack:ys) memory dataPointer   = putStrLn (show $ ys)
+eval xs (DebugMemory:ys) memory dataPointer = putStrLn (show $ take debugMax $ memory)
