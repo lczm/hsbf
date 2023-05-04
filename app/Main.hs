@@ -15,10 +15,10 @@ exampleInputHelloWorld :: String
 exampleInputHelloWorld = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
 
 exampleIncrementDecrement :: String
-exampleIncrementDecrement = "++@"
+exampleIncrementDecrement = "++.@"
 
 debugMax :: Int
-debugMax = 5
+debugMax = 10
 
 memory :: [Int]
 memory = (repeat 0)
@@ -40,7 +40,6 @@ exampleInstructions = map parse exampleIncrementDecrement
 main :: IO ()
 main = do
   putStrLn "HSBF"
-  -- eval exampleInstructions memory dataPointer
   eval exampleInstructions memory dataPointer
 
 parse :: Char -> Instruction
@@ -60,7 +59,10 @@ eval (MoveNext:xs) memory dataPointer    = eval xs memory (dataPointer+1)
 eval (MovePrev:xs) memory dataPointer    = eval xs memory (dataPointer-1)
 eval (Increment:xs) memory dataPointer   = eval xs (modifyMemory memory dataPointer ((memory !! dataPointer)+1)) dataPointer
 eval (Decrement:xs) memory dataPointer   = eval xs (modifyMemory memory dataPointer ((memory !! dataPointer)-1)) dataPointer
-eval (Print:xs) memory dataPointer       = pure ()
+eval (Print:xs) memory dataPointer       = do 
+  -- current data at the memory cell
+  putStrLn $ show (memory !! dataPointer)
+  eval xs memory (dataPointer + 1)
 eval (Store:xs) memory dataPointer       = pure ()
 eval (JumpForward:xs) memory dataPointer = pure ()
 eval (JumpBack:xs) memory dataPointer    = pure ()
