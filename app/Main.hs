@@ -15,7 +15,7 @@ exampleInputHelloWorld :: String
 exampleInputHelloWorld = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
 
 exampleIncrementDecrement :: String
-exampleIncrementDecrement = "++.@"
+exampleIncrementDecrement = "++.,.@"
 
 debugMax :: Int
 debugMax = 10
@@ -62,8 +62,14 @@ eval (Decrement:xs) memory dataPointer   = eval xs (modifyMemory memory dataPoin
 eval (Print:xs) memory dataPointer       = do 
   -- current data at the memory cell
   putStrLn $ show (memory !! dataPointer)
+  -- move to next instruction
   eval xs memory (dataPointer + 1)
-eval (Store:xs) memory dataPointer       = pure ()
+eval (Store:xs) memory dataPointer       = do
+  char <- getChar
+  putStrLn $ show char
+  putStrLn $ show (fromEnum char)
+  -- move to next instruction
+  eval xs (modifyMemory memory dataPointer (fromEnum char)) (dataPointer+1)
 eval (JumpForward:xs) memory dataPointer = pure ()
 eval (JumpBack:xs) memory dataPointer    = pure ()
 eval (Debug:xs) memory dataPointer       = putStrLn (show $ take debugMax $ memory)
