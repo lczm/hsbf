@@ -12,16 +12,18 @@ data Instruction = MoveNext
                  | JumpBack
                  | DebugInstructions
                  | DebugMemory
+                 | Unknown
                  deriving Show
 
 exampleInputHelloWorld :: String
 exampleInputHelloWorld = 
   "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
 
-exampleInputHelloWorld2 = "+[-->-[>>+>-----<<]<--<---]>-.>>>+.>>..+++[.>]<<<<.+++.------.<<-.>>>>+."
-
 exampleInputHelloWorld3 = ">++++++++[-<+++++++++>]<.>>+>-[+]++>++>+++[>[->+++<<+++>]<<]>-----.>->\
 \+++..+++.>-.<<+[>[+>+]>>]<--------------.>>.+++.------.--------.>+.>+."
+
+exampleInputHelloWorld4 = "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>."
+
 
 examplePi = ">+++++++++++++++\
 \[<+>>>>>>>>++++++++++<<<<<<<-]>+++++[<+++++++++>-]+>>>>>>+[<<+++[>>[-<]<[>]<-]>>\
@@ -47,6 +49,20 @@ exampleCollatz = ">,[\
 \        >[[>+>>[<<<<+>>>>-]>]<<<<[-]>[-<<<<]]>>>>>>>\
 \    ]>>+[[-]++++++>>>>]<<<<[[<++++++++>-]<.[-]<[-]<[-]<]<,\
 \]"
+
+exampleGoldenRatio = "\
+\+>>>>>>>++>+>+>+>++<[\
+\    +[\
+\        --[++>>--]->--[\
+\            +[\
+\                +<+[-<<+]++<<[-[->-[>>-]++<[<<]++<<-]+<<]>>>>-<<<<\
+\                <++<-<<++++++[<++++++++>-]<.---<[->.[-]+++++>]>[[-]>>]\
+\            ]+>>--\
+\        ]+<+[-<+<+]++>>\
+\    ]<<<<[[<<]>>[-[+++<<-]+>>-]++[<<]<<<<<+>]\
+\    >[->>[[>>>[>>]+[-[->>+>>>>-[-[+++<<[-]]+>>-]++[<<]]+<<]<-]<]]>>>>>>>\
+\]"
+
 
 exampleIncrementDecrement :: String
 exampleIncrementDecrement = "++.@"
@@ -87,12 +103,12 @@ dataPointer = 1
 previousStack :: [Instruction]
 previousStack = []
 
-exampleInstructions = map parse $ reverse $ stripSpace exampleCollatz
+exampleInstructions = map parse $ reverse $ stripSpace exampleInputHelloWorld3
 
 main :: IO ()
 main = do
   putStrLn "HSBF"
-  eval exampleInstructions memory 0 0 (repeat 0) False 0
+  eval exampleInstructions memory 0 10 (repeat 0) False 0
 
 parse :: Char -> Instruction
 parse '>' = MoveNext
@@ -105,6 +121,7 @@ parse '[' = JumpForward
 parse ']' = JumpBack
 parse '@' = DebugInstructions
 parse '#' = DebugMemory
+parse _   = Unknown
 
 stripSpace :: String -> String
 stripSpace [] = []
@@ -117,29 +134,37 @@ eval :: [Instruction] -> [Int] -> Int -> Int -> [Int] -> Bool -> Int -> IO ()
 eval instructions memory instructionPointer dataPointer instructionPointerStack True bracketCounter = do
   -- putStrLn $ "got into this case " ++ show instructionPointer
   case (instructions !! instructionPointer) of 
-    JumpForward -> eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack True (bracketCounter+1)
+    JumpForward -> do
+      putStrLn "IsJumping [JumpForward]"
+      eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack True (bracketCounter+1)
     JumpBack -> if (bracketCounter-1) == 0
-                   then eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack False (bracketCounter-1)
-                   else eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack True (bracketCounter-1)
-    _ -> eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack True bracketCounter
+                   then do 
+                     putStrLn "IsJumping [JumpBack] EXIT"
+                     eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack False (bracketCounter-1)
+                   else do
+                     putStrLn "IsJumping [JumpBack] JUMPING"
+                     eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack True (bracketCounter-1)
+    _ -> do
+      putStrLn $ "IsJumping [ANY] " ++ show (instructions !! instructionPointer)
+      eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack True bracketCounter
 eval instructions memory instructionPointer dataPointer instructionPointerStack False bracketCounter = do
   if (instructionPointer == (length instructions))
      then putStrLn $ "HSBF END"
      else do
        case (instructions !! instructionPointer) of
          MoveNext -> do
-           -- putStrLn "MoveNext"
+           putStrLn "MoveNext"
            eval instructions memory (instructionPointer+1) (dataPointer+1) instructionPointerStack False bracketCounter
          MovePrev -> do
            -- putStrLn $ show $ take 15 memory
-           -- putStrLn "MovePrev"
+           putStrLn "MovePrev"
            eval instructions memory (instructionPointer+1) (dataPointer-1) instructionPointerStack False bracketCounter
          Increment -> do
-           -- putStrLn $ "Increment : " ++ (show $ take 15 $ modifyMemory memory dataPointer ((memory !! dataPointer)+1))
+           putStrLn $ "Increment : " ++ (show $ take 15 $ modifyMemory memory dataPointer ((memory !! dataPointer)+1))
            eval instructions (modifyMemory memory dataPointer ((memory !! dataPointer)+1)) 
              (instructionPointer+1) dataPointer instructionPointerStack False bracketCounter
          Decrement -> do
-           -- putStrLn $ "Decrement : " ++ (show $ take 15 $ modifyMemory memory dataPointer ((memory !! dataPointer)-1))
+           putStrLn $ "Decrement : " ++ (show $ take 15 $ modifyMemory memory dataPointer ((memory !! dataPointer)-1))
            eval instructions (modifyMemory memory dataPointer ((memory !! dataPointer)-1))
              (instructionPointer+1) dataPointer instructionPointerStack False bracketCounter
          Print -> do
@@ -148,33 +173,35 @@ eval instructions memory instructionPointer dataPointer instructionPointerStack 
            eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack False bracketCounter
          Store -> do
            char <- getChar
-           -- putStrLn $ "Store : " ++ show (fromEnum char)
+           putStrLn $ "Store : " ++ show (fromEnum char)
            eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack False bracketCounter
          JumpForward -> do
-           -- putStrLn "JumpForward" 
            if (memory !! dataPointer) == 0
               -- jump to the command after matching ]
               then do
-                -- putStrLn $ "jump forward to ]"
+                putStrLn $ "JumpForward to ]"
                 -- let (recent:restOfStack) = instructionPointerStack
                 eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack True (bracketCounter+1)
               else do
                 -- continue execution
                 -- putStrLn $ show $ take 5 $ instructionPointerStack
-                eval instructions memory (instructionPointer+1) dataPointer ((instructionPointer+1):instructionPointerStack) False (bracketCounter+1)
+                putStrLn $ "JumpForward continue executing"
+                eval instructions memory (instructionPointer+1) dataPointer ((instructionPointer+1):instructionPointerStack) False bracketCounter
          JumpBack -> do
-           -- putStrLn ("JumpBack " ++ show instructionPointer)
+           putStrLn ("JumpBack " ++ show instructionPointer)
            -- putStrLn $ "dataPointer : " ++ show dataPointer ++ " " ++ show (memory !! dataPointer)
            if (memory !! dataPointer) /= 0
               -- jump back to the command after matching [
               then do 
                 -- putStrLn $ "JUMPING BACK" ++ (show $ instructionPointerStack !! 0)
-                eval instructions memory (instructionPointerStack !! 0) dataPointer instructionPointerStack False (bracketCounter-1)
+                putStrLn "JumpBack to ["
+                eval instructions memory (instructionPointerStack !! 0) dataPointer instructionPointerStack False bracketCounter
               else do
                 -- continue execution
-                -- putStrLn "Continue execution"
+                putStrLn "JumpBack continue executing"
                 let (recent:restOfStack) = instructionPointerStack
-                eval instructions memory (instructionPointer+1) dataPointer restOfStack False (bracketCounter-1)
+                eval instructions memory (instructionPointer+1) dataPointer restOfStack False bracketCounter
+         Unknown -> eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack False bracketCounter
          DebugInstructions -> do
            -- putStrLn $ show $ ("DebugInstructions" ++ (show $ instructions))
            eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack False bracketCounter
