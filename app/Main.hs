@@ -19,7 +19,7 @@ exampleIncrementDecrement :: String
 exampleIncrementDecrement = "++.@"
 
 exampleLoopTest :: String
-exampleLoopTest = "+++++[-@]."
+exampleLoopTest = "+++++[-.]@"
 
 debugMax :: Int
 debugMax = 10
@@ -74,10 +74,10 @@ eval instructions memory instructionPointer dataPointer instructionPointerStack 
          MoveNext -> eval instructions memory (instructionPointer+1) (dataPointer+1) instructionPointerStack
          MovePrev -> eval instructions memory (instructionPointer+1) (dataPointer-1) instructionPointerStack
          Increment -> do
-           -- putStrLn $ show $ take 5 $ modifyMemory memory dataPointer ((memory !! dataPointer)+1)
+           -- putStrLn $ "increment : " ++ (show $ take 5 $ modifyMemory memory dataPointer ((memory !! dataPointer)+1))
            eval instructions (modifyMemory memory dataPointer ((memory !! dataPointer)+1)) (instructionPointer+1) dataPointer instructionPointerStack
          Decrement -> do
-           putStrLn $ "decrement : " ++ (show $ take 5 $ modifyMemory memory dataPointer ((memory !! dataPointer)-1))
+           -- putStrLn $ "decrement : " ++ (show $ take 5 $ modifyMemory memory dataPointer ((memory !! dataPointer)-1))
            eval instructions (modifyMemory memory dataPointer ((memory !! dataPointer)-1)) (instructionPointer+1) dataPointer instructionPointerStack
          Print -> do
            putStrLn $ show (memory !! dataPointer)
@@ -91,21 +91,21 @@ eval instructions memory instructionPointer dataPointer instructionPointerStack 
            if (memory !! dataPointer) == 0
               -- jump to the command after matching ]
               then do
-                putStrLn $ "jump forward to ]"
+                -- putStrLn $ "jump forward to ]"
                 let (recent:restOfStack) = instructionPointerStack
                 eval instructions memory recent dataPointer restOfStack
               else do
-                putStrLn $ "instructionPointer at JumpForward " ++ (show $ instructionPointer+1) ++ " " ++ (show $ instructions !! (instructionPointer+1))
+                -- putStrLn $ "instructionPointer at JumpForward " ++ (show $ instructionPointer+1) ++ " " ++ (show $ instructions !! (instructionPointer+1))
                 -- putStrLn $ show $ take 5 $ instructionPointerStack
                 eval instructions memory (instructionPointer+1) dataPointer ((instructionPointer+1):instructionPointerStack) -- continue execution
          JumpBack -> do
            if (memory !! dataPointer) /= 0
               -- jump back to the command after matching [
               then do 
-                putStrLn $ "JumpBack " ++ (show $ instructionPointerStack !! 0)
+                -- putStrLn $ "JumpBack " ++ (show $ instructionPointerStack !! 0)
                 eval instructions memory (instructionPointerStack !! 0) dataPointer instructionPointerStack
               else do
-                putStrLn "Continue execution"
+                -- putStrLn "Continue execution"
                 eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack -- continue execution
          DebugInstructions -> do
            putStrLn (show $ instructions)
