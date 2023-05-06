@@ -15,7 +15,8 @@ data Instruction = MoveNext
                  deriving Show
 
 exampleInputHelloWorld :: String
-exampleInputHelloWorld = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
+exampleInputHelloWorld = 
+  "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
 
 exampleInputHelloWorld2 = "+[-->-[>>+>-----<<]<--<---]>-.>>>+.>>..+++[.>]<<<<.+++.------.<<-.>>>>+."
 examplePi = ">+++++++++++++++\
@@ -70,7 +71,7 @@ previousStack :: [Instruction]
 previousStack = []
 
 -- exampleInstructions = map parse exampleIncrementDecrement
-exampleInstructions = map parse $ reverse $ stripSpace examplePlaceholder
+exampleInstructions = map parse $ reverse $ stripSpace exampleInputHelloWorld2
 -- exampleInstructions = map parse exampleLoopTest
 
 main :: IO ()
@@ -108,13 +109,14 @@ eval instructions memory instructionPointer dataPointer instructionPointerStack 
            -- putStrLn "MoveNext"
            eval instructions memory (instructionPointer+1) (dataPointer+1) instructionPointerStack
          MovePrev -> do
-           -- putStrLn "MovePrev"
+           putStrLn $ show $ take 15 memory
+           putStrLn "MovePrev"
            eval instructions memory (instructionPointer+1) (dataPointer-1) instructionPointerStack
          Increment -> do
-           putStrLn $ "Increment : " ++ (show $ take 5 $ modifyMemory memory dataPointer ((memory !! dataPointer)+1))
+           putStrLn $ "Increment : " ++ (show $ take 15 $ modifyMemory memory dataPointer ((memory !! dataPointer)+1))
            eval instructions (modifyMemory memory dataPointer ((memory !! dataPointer)+1)) (instructionPointer+1) dataPointer instructionPointerStack
          Decrement -> do
-           putStrLn $ "Decrement : " ++ (show $ take 5 $ modifyMemory memory dataPointer ((memory !! dataPointer)-1))
+           putStrLn $ "Decrement : " ++ (show $ take 15 $ modifyMemory memory dataPointer ((memory !! dataPointer)-1))
            eval instructions (modifyMemory memory dataPointer ((memory !! dataPointer)-1)) (instructionPointer+1) dataPointer instructionPointerStack
          Print -> do
            -- putStrLn $ "Print : " ++ (show (memory !! dataPointer))
@@ -137,15 +139,17 @@ eval instructions memory instructionPointer dataPointer instructionPointerStack 
                 -- putStrLn $ show $ take 5 $ instructionPointerStack
                 eval instructions memory (instructionPointer+1) dataPointer ((instructionPointer+1):instructionPointerStack) -- continue execution
          JumpBack -> do
-           -- putStrLn ("JumpBack " ++ show instructionPointer)
+           putStrLn ("JumpBack " ++ show instructionPointer)
+           -- putStrLn $ "dataPointer : " ++ show dataPointer ++ " " ++ show (memory !! dataPointer)
            if (memory !! dataPointer) /= 0
               -- jump back to the command after matching [
               then do 
-                -- putStrLn $ "JumpBack " ++ (show $ instructionPointerStack !! 0)
+                -- putStrLn $ "JUMPING BACK" ++ (show $ instructionPointerStack !! 0)
                 eval instructions memory (instructionPointerStack !! 0) dataPointer instructionPointerStack
               else do
                 -- putStrLn "Continue execution"
-                eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack -- continue execution
+                let (recent:restOfStack) = instructionPointerStack
+                eval instructions memory (instructionPointer+1) dataPointer restOfStack -- continue execution
          DebugInstructions -> do
            -- putStrLn $ show $ ("DebugInstructions" ++ (show $ instructions))
            eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack
