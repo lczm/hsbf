@@ -133,17 +133,17 @@ eval instructions memory instructionPointer dataPointer instructionPointerStack 
   -- putStrLn $ "got into this case " ++ show instructionPointer
   case (instructions !! instructionPointer) of 
     JumpForward -> do
-      putStrLn "IsJumping [JumpForward]"
+      -- putStrLn "IsJumping [JumpForward]"
       eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack True (bracketCounter+1)
     JumpBack -> if (bracketCounter-1) == 0
                    then do 
-                     putStrLn "IsJumping [JumpBack] EXIT"
+                     -- putStrLn "IsJumping [JumpBack] EXIT"
                      eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack False 0
                    else do
-                     putStrLn $ "IsJumping [JumpBack] JUMPING " ++ show (bracketCounter-1)
+                     -- putStrLn $ "IsJumping [JumpBack] JUMPING " ++ show (bracketCounter-1)
                      eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack True (bracketCounter-1)
     _ -> do
-      putStrLn $ "IsJumping [ANY] " ++ show (instructions !! instructionPointer)
+      -- putStrLn $ "IsJumping [ANY] " ++ show (instructions !! instructionPointer)
       eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack True bracketCounter
 eval instructions memory instructionPointer dataPointer instructionPointerStack False bracketCounter = do
   if (instructionPointer == (length instructions))
@@ -154,18 +154,18 @@ eval instructions memory instructionPointer dataPointer instructionPointerStack 
      else do
        case (instructions !! instructionPointer) of
          MoveNext -> do
-           putStrLn "MoveNext"
+           -- putStrLn "MoveNext"
            eval instructions memory (instructionPointer+1) (dataPointer+1) instructionPointerStack False bracketCounter
          MovePrev -> do
            -- putStrLn $ show $ take 15 memory
-           putStrLn "MovePrev"
+           -- putStrLn "MovePrev"
            eval instructions memory (instructionPointer+1) (dataPointer-1) instructionPointerStack False bracketCounter
          Increment -> do
-           putStrLn $ "Increment : " ++ (show $ take 15 $ modifyMemory memory dataPointer ((memory !! dataPointer)+1))
+           -- putStrLn $ "Increment : " ++ (show $ take 15 $ modifyMemory memory dataPointer ((memory !! dataPointer)+1))
            eval instructions (modifyMemory memory dataPointer ((memory !! dataPointer)+1)) 
              (instructionPointer+1) dataPointer instructionPointerStack False bracketCounter
          Decrement -> do
-           putStrLn $ "Decrement : " ++ (show $ take 15 $ modifyMemory memory dataPointer ((memory !! dataPointer)-1))
+           -- putStrLn $ "Decrement : " ++ (show $ take 15 $ modifyMemory memory dataPointer ((memory !! dataPointer)-1))
            eval instructions (modifyMemory memory dataPointer ((memory !! dataPointer)-1))
              (instructionPointer+1) dataPointer instructionPointerStack False bracketCounter
          Print -> do
@@ -181,26 +181,26 @@ eval instructions memory instructionPointer dataPointer instructionPointerStack 
            if (memory !! dataPointer) == 0
               -- jump to the command after matching ]
               then do
-                putStrLn $ "JumpForward to ]"
+                -- putStrLn $ "JumpForward to ]"
                 -- let (recent:restOfStack) = instructionPointerStack
                 eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack True (bracketCounter+1)
               else do
                 -- continue execution
                 -- putStrLn $ show $ take 5 $ instructionPointerStack
-                putStrLn $ "JumpForward continue executing"
+                -- putStrLn $ "JumpForward continue executing"
                 eval instructions memory (instructionPointer+1) dataPointer ((instructionPointer+1):instructionPointerStack) False bracketCounter
          JumpBack -> do
-           putStrLn ("JumpBack " ++ show instructionPointer)
+           -- putStrLn ("JumpBack " ++ show instructionPointer)
            -- putStrLn $ "dataPointer : " ++ show dataPointer ++ " " ++ show (memory !! dataPointer)
            if (memory !! dataPointer) /= 0
               -- jump back to the command after matching [
               then do 
                 -- putStrLn $ "JUMPING BACK" ++ (show $ instructionPointerStack !! 0)
-                putStrLn "JumpBack to ["
+                -- putStrLn "JumpBack to ["
                 eval instructions memory (instructionPointerStack !! 0) dataPointer instructionPointerStack False bracketCounter
               else do
                 -- continue execution
-                putStrLn "JumpBack continue executing"
+                -- putStrLn "JumpBack continue executing"
                 let (recent:restOfStack) = instructionPointerStack
                 eval instructions memory (instructionPointer+1) dataPointer restOfStack False bracketCounter
          Unknown -> eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack False bracketCounter
