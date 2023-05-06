@@ -1,6 +1,7 @@
 module Main where
 
 import Data.Char
+import System.IO
 
 data Instruction = MoveNext
                  | MovePrev
@@ -61,24 +62,13 @@ exampleGoldenRatio = "\
 \    >[->>[[>>>[>>]+[-[->>+>>>>-[-[+++<<[-]]+>>-]++[<<]]+<<]<-]<]]>>>>>>>\
 \]"
 
-
-exampleIncrementDecrement :: String
 exampleIncrementDecrement = "++.@"
 
-exampleLoopTest :: String
 exampleLoopTest = "+++++[+[--.].]@"
 
 examplePlaceholder = ">+++++++++[<++++++++>-]<.>+++++++[<++++>-]<+.+++++++..+++.[-]\
 \>++++++++[<++++>-] <.>+++++++++++[<++++++++>-]<-.--------.+++\
 \.------.--------.[-]>++++++++[<++++>- ]<+.[-]++++++++++."
-
--- examplePlaceholder = ">+++++++++[<++++++++>-]<.\
--- \>+++++++[<++++>-]<+.\
--- \+++++++..+++.[-]\
--- \>++++++++[<++++>-] <.\
--- \>+++++++++++[<++++++++>-]<-.--------.+++\
--- \.------.--------.\
--- \[-]>++++++++[<++++>- ]<+.[-]++++++++++."
 
 debugMax :: Int
 debugMax = 10
@@ -101,7 +91,7 @@ dataPointer = 1
 previousStack :: [Instruction]
 previousStack = []
 
-exampleInstructions = map parse $ reverse $ stripSpace exampleCollatz
+exampleInstructions = map parse $ reverse $ stripSpace exampleInputHelloWorld
 
 main :: IO ()
 main = do
@@ -148,9 +138,10 @@ eval instructions memory instructionPointer dataPointer instructionPointerStack 
 eval instructions memory instructionPointer dataPointer instructionPointerStack False bracketCounter = do
   if (instructionPointer == (length instructions))
      then do
-       putStrLn $ "instruction pointer : " ++ show instructionPointer
-       putStrLn $ "(length instructions) : " ++ show (length instructions)
-       putStrLn $ "HSBF END"
+       putStrLn ""
+       -- putStrLn $ "instruction pointer : " ++ show instructionPointer
+       -- putStrLn $ "(length instructions) : " ++ show (length instructions)
+       -- putStrLn $ "HSBF END"
      else do
        case (instructions !! instructionPointer) of
          MoveNext -> do
@@ -170,7 +161,9 @@ eval instructions memory instructionPointer dataPointer instructionPointerStack 
              (instructionPointer+1) dataPointer instructionPointerStack False bracketCounter
          Print -> do
            -- putStrLn $ "Print : " ++ (show (memory !! dataPointer))
-           putStrLn $ "Print : " ++ (show $ chr $ (memory !! dataPointer))
+           -- putStrLn $ "Print : " ++ (show $ chr $ (memory !! dataPointer))
+           putStr $ id $ [chr $ (memory !! dataPointer)]
+           hFlush stdout
            eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack False bracketCounter
          Store -> do
            char <- getChar
