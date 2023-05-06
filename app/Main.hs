@@ -2,6 +2,8 @@ module Main where
 
 import Data.Char
 import System.IO
+import System.Environment
+import Control.Monad
 
 data Instruction = MoveNext
                  | MovePrev
@@ -65,12 +67,6 @@ examplePlaceholder = ">+++++++++[<++++++++>-]<.>+++++++[<++++>-]<+.+++++++..+++.
 \>++++++++[<++++>-] <.>+++++++++++[<++++++++>-]<-.--------.+++\
 \.------.--------.[-]>++++++++[<++++>- ]<+.[-]++++++++++."
 
-debugMax :: Int
-debugMax = 10
-
-memory :: [Int]
-memory = (repeat 0)
-
 modifyMemory :: [Int] -> Int -> Int -> [Int]
 modifyMemory [] _ _ = []
 modifyMemory xs i x = modifyMemory' xs 0 i x
@@ -80,18 +76,20 @@ modifyMemory' (x:xs) current i y = if current == i
                                       then y:xs
                                       else x:(modifyMemory' xs (current+1) i y)
 
-dataPointer :: Int
-dataPointer = 1
-
-previousStack :: [Instruction]
-previousStack = []
-
-exampleInstructions = map parse $ reverse $ stripSpace examplePi
-
 main :: IO ()
 main = do
-  putStrLn "HSBF"
-  eval exampleInstructions memory 0 10 (repeat 0) False 0
+  args <- getArgs
+  print args
+
+  if length args /= 1
+     then putStrLn "Program to one file as argument" >> pure ()
+     else do 
+       file <- openFile (head args) ReadMode
+       text <- hGetContents file
+       print text
+       -- putStrLn "HSBF"
+       -- eval exampleInstructions (repeat 0) 0 10 (repeat 0) False 0
+       eval (map parse $ reverse $ stripSpace text) (repeat 0) 0 10 (repeat 0) False 0
 
 parse :: Char -> Instruction
 parse '>' = MoveNext
