@@ -1,5 +1,7 @@
 module Main where
 
+import Data.Char
+
 data Instruction = MoveNext
                  | MovePrev
                  | Increment
@@ -15,11 +17,36 @@ data Instruction = MoveNext
 exampleInputHelloWorld :: String
 exampleInputHelloWorld = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
 
+exampleInputHelloWorld2 = "+[-->-[>>+>-----<<]<--<---]>-.>>>+.>>..+++[.>]<<<<.+++.------.<<-.>>>>+."
+examplePi = ">+++++++++++++++\
+\[<+>>>>>>>>++++++++++<<<<<<<-]>+++++[<+++++++++>-]+>>>>>>+[<<+++[>>[-<]<[>]<-]>>\
+\[>+>]<[<]>]>[[->>>>+<<<<]>>>+++>-]<[<<<<]<<<<<<<<+[->>>>>>>>>>>>[<+[->>>>+<<<<]>\
+\>>>>]<<<<[>>>>>[<<<<+>>>>-]<<<<<-[<<++++++++++>>-]>>>[<<[<+<<+>>>-]<[>+<-]<++<<+\
+\>>>>>>-]<<[-]<<-<[->>+<-[>>>]>[[<+>-]>+>>]<<<<<]>[-]>+<<<-[>>+<<-]<]<<<<+>>>>>>>\
+\>[-]>[<<<+>>>-]<<++++++++++<[->>+<-[>>>]>[[<+>-]>+>>]<<<<<]>[-]>+>[<<+<+>>>-]<<<\
+\<+<+>>[-[-[-[-[-[-[-[-[-<->[-<+<->>]]]]]]]]]]<[+++++[<<<++++++++<++++++++>>>>-]<\
+\<<<+<->>>>[>+<<<+++++++++<->>>-]<<<<<[>>+<<-]+<[->-<]>[>>.<<<<[+.[-]]>>-]>[>>.<<\
+\-]>[-]>[-]>>>[>>[<<<<<<<<+>>>>>>>>-]<<-]]>>[-]<<<[-]<<<<<<<<]++++++++++."
+
+exampleLoop = "+++++[-]"
+
 exampleIncrementDecrement :: String
 exampleIncrementDecrement = "++.@"
 
 exampleLoopTest :: String
 exampleLoopTest = "+++++[+[--.].]@"
+
+examplePlaceholder = ">+++++++++[<++++++++>-]<.>+++++++[<++++>-]<+.+++++++..+++.[-]\
+\>++++++++[<++++>-] <.>+++++++++++[<++++++++>-]<-.--------.+++\
+\.------.--------.[-]>++++++++[<++++>- ]<+.[-]++++++++++."
+
+-- examplePlaceholder = ">+++++++++[<++++++++>-]<.\
+-- \>+++++++[<++++>-]<+.\
+-- \+++++++..+++.[-]\
+-- \>++++++++[<++++>-] <.\
+-- \>+++++++++++[<++++++++>-]<-.--------.+++\
+-- \.------.--------.\
+-- \[-]>++++++++[<++++>- ]<+.[-]++++++++++."
 
 debugMax :: Int
 debugMax = 10
@@ -43,8 +70,8 @@ previousStack :: [Instruction]
 previousStack = []
 
 -- exampleInstructions = map parse exampleIncrementDecrement
--- exampleInstructions = map parse exampleInputHelloWorld
-exampleInstructions = map parse exampleLoopTest
+exampleInstructions = map parse $ reverse $ stripSpace examplePlaceholder
+-- exampleInstructions = map parse exampleLoopTest
 
 main :: IO ()
 main = do
@@ -63,6 +90,12 @@ parse ']' = JumpBack
 parse '@' = DebugInstructions
 parse '#' = DebugMemory
 
+stripSpace :: String -> String
+stripSpace [] = []
+stripSpace (x:xs) = if isSpace x
+                       then stripSpace xs
+                       else (stripSpace xs) ++ [x]
+
 -- eval :: Instructions -> Memory -> InstructionPointer -> DataPointer -> DataPointerStack
 eval :: [Instruction] -> [Int] -> Int -> Int -> [Int] -> IO ()
 eval instructions memory instructionPointer dataPointer instructionPointerStack = do
@@ -71,23 +104,28 @@ eval instructions memory instructionPointer dataPointer instructionPointerStack 
      then putStrLn $ "HSBF END"
      else do
        case (instructions !! instructionPointer) of
-         MoveNext -> eval instructions memory (instructionPointer+1) (dataPointer+1) instructionPointerStack
-         MovePrev -> eval instructions memory (instructionPointer+1) (dataPointer-1) instructionPointerStack
+         MoveNext -> do
+           -- putStrLn "MoveNext"
+           eval instructions memory (instructionPointer+1) (dataPointer+1) instructionPointerStack
+         MovePrev -> do
+           -- putStrLn "MovePrev"
+           eval instructions memory (instructionPointer+1) (dataPointer-1) instructionPointerStack
          Increment -> do
-           -- putStrLn $ "increment : " ++ (show $ take 5 $ modifyMemory memory dataPointer ((memory !! dataPointer)+1))
+           putStrLn $ "Increment : " ++ (show $ take 5 $ modifyMemory memory dataPointer ((memory !! dataPointer)+1))
            eval instructions (modifyMemory memory dataPointer ((memory !! dataPointer)+1)) (instructionPointer+1) dataPointer instructionPointerStack
          Decrement -> do
-           -- putStrLn $ "decrement : " ++ (show $ take 5 $ modifyMemory memory dataPointer ((memory !! dataPointer)-1))
+           putStrLn $ "Decrement : " ++ (show $ take 5 $ modifyMemory memory dataPointer ((memory !! dataPointer)-1))
            eval instructions (modifyMemory memory dataPointer ((memory !! dataPointer)-1)) (instructionPointer+1) dataPointer instructionPointerStack
          Print -> do
-           putStrLn $ show (memory !! dataPointer)
+           -- putStrLn $ "Print : " ++ (show (memory !! dataPointer))
+           putStrLn $ show $ chr $ (memory !! dataPointer)
            eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack
          Store -> do
            char <- getChar
-           -- putStrLn $ show char
-           putStrLn $ show (fromEnum char)
+           -- putStrLn $ "Store : " ++ show (fromEnum char)
            eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack
          JumpForward -> do
+           -- putStrLn "JumpForward" 
            if (memory !! dataPointer) == 0
               -- jump to the command after matching ]
               then do
@@ -99,6 +137,7 @@ eval instructions memory instructionPointer dataPointer instructionPointerStack 
                 -- putStrLn $ show $ take 5 $ instructionPointerStack
                 eval instructions memory (instructionPointer+1) dataPointer ((instructionPointer+1):instructionPointerStack) -- continue execution
          JumpBack -> do
+           -- putStrLn ("JumpBack " ++ show instructionPointer)
            if (memory !! dataPointer) /= 0
               -- jump back to the command after matching [
               then do 
@@ -108,9 +147,10 @@ eval instructions memory instructionPointer dataPointer instructionPointerStack 
                 -- putStrLn "Continue execution"
                 eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack -- continue execution
          DebugInstructions -> do
-           putStrLn (show $ instructions)
+           -- putStrLn $ show $ ("DebugInstructions" ++ (show $ instructions))
            eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack
          DebugMemory -> do
-           putStrLn (show $ memory)
+           -- putStrLn $ show $ ("DebugMemory" ++ (take 10 $ show $ memory))
+           -- putStrLn (show $ memory)
            eval instructions memory (instructionPointer+1) dataPointer instructionPointerStack
 
