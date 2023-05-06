@@ -19,7 +19,7 @@ exampleIncrementDecrement :: String
 exampleIncrementDecrement = "++.@"
 
 exampleLoopTest :: String
-exampleLoopTest = "+++++[-.]@"
+exampleLoopTest = "+++++[+[--.].]@"
 
 debugMax :: Int
 debugMax = 10
