@@ -19,11 +19,6 @@ data Instruction = MoveNext
 exampleInputHelloWorld = 
   "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
 
-exampleInputHelloWorld3 = ">++++++++[-<+++++++++>]<.>>+>-[+]++>++>+++[>[->+++<<+++>]<<]>-----.>->\
-\+++..+++.>-.<<+[>[+>+]>>]<--------------.>>.+++.------.--------.>+.>+."
-
-exampleInputHelloWorld4 = "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>."
-
 examplePi = ">+++++++++++++++\
 \[<+>>>>>>>>++++++++++<<<<<<<-]>+++++[<+++++++++>-]+>>>>>>+[<<+++[>>[-<]<[>]<-]>>\
 \[>+>]<[<]>]>[[->>>>+<<<<]>>>+++>-]<[<<<<]<<<<<<<<+[->>>>>>>>>>>>[<+[->>>>+<<<<]>\
@@ -91,7 +86,7 @@ dataPointer = 1
 previousStack :: [Instruction]
 previousStack = []
 
-exampleInstructions = map parse $ reverse $ stripSpace exampleInputHelloWorld
+exampleInstructions = map parse $ reverse $ stripSpace examplePi
 
 main :: IO ()
 main = do
